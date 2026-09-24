@@ -87,7 +87,7 @@ To add it:
 1. Go to **Settings > Dashboards > Add dashboard > New dashboard from scratch** and open it.
 2. Choose the pencil (Edit dashboard), then the three dots > **Raw configuration editor**.
 3. Paste the contents of `dashboards/owlet.yaml`.
-4. Replace every `owlet_sock_serial_number` with the entity id prefix of your sock. You find it on the device page of your sock, for example `sensor.owlet_sock_ab12cd34_heart_rate` has the prefix `owlet_sock_ab12cd34`.
+4. Replace every `owlet_sock_serial_number` with the entity id prefix of your sock. You find it on the device page of your sock, for example `sensor.owlet_sock_ab12cd34_heart_rate` has the prefix `owlet_sock_ab12cd34`. Newer Home Assistant releases put the area in front, then `sensor.nursery_owlet_sock_ab12cd34_heart_rate` has the prefix `nursery_owlet_sock_ab12cd34`.
 
 With more than one sock, duplicate the view and use the prefix of the other sock. Trends fill up over time: the daily statistics start from the moment the integration is installed.
 
