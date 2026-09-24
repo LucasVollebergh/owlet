@@ -1,6 +1,30 @@
 # Changelog
 
 <!--next-version-placeholder-->
+## 2026.9.0 (2026-09-24)
+First release of the maintained fork [lucasvollebergh/owlet](https://github.com/lucasvollebergh/owlet). Drop-in replacement for ryanbdclark/owlet: same domain and unique ids.
+### Fix
+* Options dialog works again on Home Assistant 2025.12 and later (the options flow no longer sets `config_entry` itself).
+* "Invalid handler specified" when adding the integration: the integration now works with every pyowletapi 2025.4.x release, including the ones that removed `OwletEmailError` and `OwletPasswordError`.
+* Expired logins during polling now start a reauthentication flow instead of failing with a `KeyError`.
+* Setup without supported socks or with a connection error now retries instead of failing permanently.
+* The reauthentication dialog shows an error instead of silently doing nothing when login fails.
+* No more fake `unknown` MAC address and hardcoded hardware version on the device.
+* Option labels match the actual options, the minimum polling interval text was wrong.
+### Feature
+* Stale data detection: new Data stale binary sensor and Last reading sensor, vitals become unavailable when the Owlet cloud stops receiving readings.
+* Configurable stale data threshold in the options.
+* Reconfigure flow to change region or log in again.
+* Diagnostics download with redaction of tokens and personal data.
+* Dutch translation. Removed the untranslated English copy under the Ukrainian language code.
+* Region dropdown with translated labels and a description of which region to pick.
+* Base station switch refreshes its state right after a command and shows an error when the command fails.
+### Changed
+* Default polling interval for new setups is 10 seconds (minimum stays 5) to reduce the load on the Owlet cloud.
+* Minimum Home Assistant version is 2025.12.
+* Signal strength and the new Last reading and Data stale entities are diagnostic entities.
+* Uses `entry.runtime_data`, `icons.json` and the current config flow helpers.
+* New test suite on pytest-homeassistant-custom-component, CI for hassfest, HACS, ruff and pytest, and a release workflow that builds `owlet.zip`.
 ## 2025.4.3 (2025-04-15)
 ### Fix
 * Changes to how the sensors are stored to solve the issue where only one device is added, thanks [`@MarjovanLier`](https://github.com/MarjovanLier). ([`1244bff`](https://github.com/ryanbdclark/owlet/commit/1244bffcb48d7337a9d7a0da518959fe4b31a230))
