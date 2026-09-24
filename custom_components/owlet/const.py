@@ -1,11 +1,31 @@
 """Constants for the Owlet Smart Sock integration."""
 
-DOMAIN = "owlet"
+from typing import Final
 
-CONF_OWLET_EXPIRY = "expiry"
-CONF_OWLET_REFRESH = "refresh"
+DOMAIN: Final = "owlet"
 
-SUPPORTED_VERSIONS = [2, 3]
-POLLING_INTERVAL = 5
-MANUFACTURER = "Owlet Baby Care"
-SLEEP_STATES = {0: "unknown", 1: "awake", 8: "light_sleep", 15: "deep_sleep"}
+CONF_OWLET_EXPIRY: Final = "expiry"
+CONF_OWLET_REFRESH: Final = "refresh"
+CONF_STALE_THRESHOLD: Final = "stale_threshold"
+
+REGIONS: Final = ["europe", "world"]
+SUPPORTED_VERSIONS: Final = [2, 3]
+
+# Seconds between polls of the Owlet cloud. Every poll costs several API calls
+# per sock, so the default is deliberately more conservative than the minimum.
+POLLING_INTERVAL: Final = 10
+MIN_POLLING_INTERVAL: Final = 5
+
+# Minutes without a fresh reading before vitals are treated as stale, 0 disables.
+DEFAULT_STALE_THRESHOLD: Final = 5
+
+MANUFACTURER: Final = "Owlet Baby Care"
+SLEEP_STATES: Final = {0: "unknown", 1: "awake", 8: "light_sleep", 15: "deep_sleep"}
+
+# Raw Ayla properties whose data_updated_at reflects a fresh vitals reading.
+FRESHNESS_PROPERTIES: Final = (
+    "REAL_TIME_VITALS",
+    "HEART_RATE",
+    "OXYGEN_LEVEL",
+    "BATT_LEVEL",
+)

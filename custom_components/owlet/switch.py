@@ -4,30 +4,28 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Any
 
 from pyowletapi.sock import Sock
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import OwletConfigEntry
+from .compat import OwletError
 from .coordinator import OwletCoordinator
 from .entity import OwletBaseEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
 class OwletSwitchEntityDescription(SwitchEntityDescription):
     """Describes Owlet switch entity."""
 
-    turn_on_fn: Callable[[Sock], Callable[[bool], Coroutine[Any, Any, None]]]
-    turn_off_fn: Callable[[Sock], Callable[[bool], Coroutine[Any, Any, None]]]
+    set_fn: Callable[[Sock, bool], Coroutine[Any, Any, Any]]
     available_during_charging: bool
 
 
@@ -35,8 +33,7 @@ SWITCHES: tuple[OwletSwitchEntityDescription, ...] = (
     OwletSwitchEntityDescription(
         key="base_station_on",
         translation_key="base_on",
-        turn_on_fn=lambda sock: (lambda state: sock.control_base_station(state)),
-        turn_off_fn=lambda sock: (lambda state: sock.control_base_station(state)),
+        set_fn=lambda sock, state: sock.control_base_station(state),
         available_during_charging=False,
     ),
 )
@@ -44,16 +41,16 @@ SWITCHES: tuple[OwletSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OwletConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Owlet switch based on a config entry."""
-    coordinators: OwletCoordinator = hass.data[DOMAIN][config_entry.entry_id].values()
-
-    switches = []
-    for coordinator in coordinators:
-        switches.extend([OwletBaseSwitch(coordinator, switch) for switch in SWITCHES])
-    async_add_entities(switches)
+    async_add_entities(
+        OwletBaseSwitch(coordinator, description)
+        for coordinator in config_entry.runtime_data.values()
+        for description in SWITCHES
+        if description.key in coordinator.sock.properties
+    )
 
 
 class OwletBaseSwitch(OwletBaseEntity, SwitchEntity):
@@ -70,25 +67,35 @@ class OwletBaseSwitch(OwletBaseEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{self.sock.serial}-{description.key}"
-        self._attr_is_on = False
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (
-            not self.sock.properties["charging"]
+            not self.sock.properties.get("charging")
             or self.entity_description.available_during_charging
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if switch is on or off."""
-        return self.sock.properties[self.entity_description.key]
+        value = self.sock.properties.get(self.entity_description.key)
+        return None if value is None else bool(value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await self.entity_description.turn_on_fn(self.sock)(True)
+        await self._async_set(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await self.entity_description.turn_off_fn(self.sock)(False)
+        await self._async_set(False)
+
+    async def _async_set(self, state: bool) -> None:
+        """Send the command and refresh the sock state."""
+        try:
+            await self.entity_description.set_fn(self.sock, state)
+        except OwletError as err:
+            raise HomeAssistantError(
+                translation_domain="owlet", translation_key="command_failed"
+            ) from err
+        await self.coordinator.async_request_refresh()

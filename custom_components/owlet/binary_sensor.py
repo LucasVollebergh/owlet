@@ -9,16 +9,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import OwletConfigEntry
 from .coordinator import OwletCoordinator
 from .entity import OwletBaseEntity
 
+PARALLEL_UPDATES = 0
 
-@dataclass(kw_only=True)
+
+@dataclass(frozen=True, kw_only=True)
 class OwletBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Represent the owlet binary sensor entity description."""
 
@@ -97,23 +99,22 @@ SENSORS: tuple[OwletBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OwletConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the owlet sensors from config entry."""
+    """Set up the owlet binary sensors from config entry."""
+    sensors: list[BinarySensorEntity] = []
 
-    coordinators: OwletCoordinator = hass.data[DOMAIN][config_entry.entry_id].values()
-
-    sensors = []
-    for coordinator in coordinators:
-        sensors.extend([
-            OwletBinarySensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key in coordinator.sock.properties
-        ])
-
-        if OwletAwakeSensor.entity_description.key in coordinator.sock.properties:
+    for coordinator in config_entry.runtime_data.values():
+        properties = coordinator.sock.properties
+        sensors.extend(
+            OwletBinarySensor(coordinator, description)
+            for description in SENSORS
+            if description.key in properties
+        )
+        if OwletAwakeSensor.entity_description.key in properties:
             sensors.append(OwletAwakeSensor(coordinator))
+        sensors.append(OwletStaleSensor(coordinator))
 
     async_add_entities(sensors)
 
@@ -134,25 +135,27 @@ class OwletBinarySensor(OwletBaseEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and (
-            not self.sock.properties["charging"]
-            or self.entity_description.available_during_charging
+        if not super().available:
+            return False
+        if self.entity_description.available_during_charging:
+            return True
+        return (
+            not self.sock.properties.get("charging") and not self.coordinator.is_stale
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-
-        return self.sock.properties[self.entity_description.key]
+        value = self.sock.properties.get(self.entity_description.key)
+        return None if value is None else bool(value)
 
 
 class OwletAwakeSensor(OwletBinarySensor):
-    """Representation of an Owlet sleep sensor."""
+    """Representation of the Owlet awake sensor."""
 
     entity_description = OwletBinarySensorEntityDescription(
         key="sleep_state",
         translation_key="awake",
-        icon="mdi:sleep",
         available_during_charging=False,
     )
 
@@ -165,5 +168,26 @@ class OwletAwakeSensor(OwletBinarySensor):
 
     @property
     def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self.sock.properties[self.entity_description.key] not in [8, 15]
+        """Return true if the baby is not in light or deep sleep."""
+        return self.sock.properties.get(self.entity_description.key) not in (8, 15)
+
+
+class OwletStaleSensor(OwletBaseEntity, BinarySensorEntity):
+    """On when the Owlet cloud stopped receiving readings from the sock."""
+
+    entity_description = BinarySensorEntityDescription(
+        key="data_stale",
+        translation_key="data_stale",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, coordinator: OwletCoordinator) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self.sock.serial}-data_stale"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true when the latest reading is older than the threshold."""
+        return self.coordinator.is_stale

@@ -1,123 +1,162 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "data": {
-                    "region": "Région",
-                    "username": "Email",
-                    "password": "Mot de passe"
-                }
-            },
-            "reauth_confirm": {
-                "title": "Réauthentification requise pour Owlet",
-                "data": {
-                    "password": "Mot de passe"
-                }
-            }
+  "config": {
+    "step": {
+      "user": {
+        "description": "Connectez-vous avec le compte que vous utilisez dans l'application Owlet.",
+        "data": {
+          "region": "Région",
+          "username": "E-mail",
+          "password": "Mot de passe"
         },
-        "error": {
-            "cannot_connect": "N'a pas réussi à se connecter",
-            "invalid_email": "L'adresse e-mail saisie est incorrecte",
-            "invalid_password": "Le mot de passe saisi est incorrect",
-            "invalid_credentials": "Les informations d'identification saisies sont incorrectes",
-            "unknown": "Une erreur inconnue est survenue"
-        },
-        "abort": {
-            "already_configured": "Appareil déjà configuré",
-            "reauth_successful": "Réauthentification réussie"
+        "data_description": {
+          "region": "Choisissez Europe si votre compte Owlet a été créé dans l'UE ou au Royaume-Uni, sinon choisissez Monde."
         }
+      },
+      "reauth_confirm": {
+        "title": "Réauthentification requise pour Owlet",
+        "description": "La connexion Owlet pour {username} n'est plus valide. Saisissez à nouveau le mot de passe.",
+        "data": {
+          "password": "Mot de passe"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Owlet",
+        "description": "Modifiez la région ou reconnectez-vous pour {username}.",
+        "data": {
+          "region": "Région",
+          "password": "Mot de passe"
+        }
+      }
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Configurer les options pour Owlet",
-                "data": {
-                    "pollinterval": "Intervalle de sondage en secondes, minimum 10"
-                }
-            }
-        }
+    "error": {
+      "cannot_connect": "Échec de connexion",
+      "invalid_email": "L'adresse e-mail saisie est incorrecte",
+      "invalid_password": "Le mot de passe saisi est incorrect",
+      "invalid_credentials": "Les informations d'identification saisies sont incorrectes",
+      "no_devices": "Aucune chaussette Owlet compatible trouvée sur ce compte",
+      "unknown": "Erreur inattendue"
     },
-    "entity": {
-        "binary_sensor": {
-            "charging": {
-                "name": "En charge"
-            },
-            "high_hr_alrt": {
-                "name": "Alerte fréquence cardiaque élevée"
-            },
-            "low_hr_alrt": {
-                "name": "Alerte fréquence cardiaque basse"
-            },
-            "high_ox_alrt": {
-                "name": "Alerte oxygène élevé"
-            },
-            "low_ox_alrt": {
-                "name": "Alerte oxygène faible"
-            },
-            "crit_ox_alrt": {
-                "name": "Alerte oxygène critique"
-            },
-            "low_batt_alrt": {
-                "name": "Alerte batterie faible"
-            },
-            "crit_batt_alrt": {
-                "name": "Alerte batterie critique"
-            },
-            "lost_pwr_alrt": {
-                "name": "Alerte perte d'alimentation"
-            },
-            "sock_discon_alrt": {
-                "name": "Alerte chaussette déconnectée"
-            },
-            "sock_off": {
-                "name": "Chaussette retirée"
-            },
-            "awake": {
-                "name": "Réveillé"
-            }
-        },
-        "sensor": {
-            "batterypercent": {
-                "name": "Pourcentage de batterie"
-            },
-            "signalstrength": {
-                "name": "Force du signal"
-            },
-            "o2saturation": {
-                "name": "Saturation O2"
-            },
-            "o2saturation10a": {
-                "name": "Moyenne de saturation O2 sur 10 minutes"
-            },
-            "heartrate": {
-                "name": "Fréquence cardiaque"
-            },
-            "batterymin": {
-                "name": "Autonomie de la batterie restante"
-            },
-            "skintemp": {
-                "name": "Température de la peau"
-            },
-            "sleepstate": {
-                "name": "État de sommeil",
-                "state": {
-                    "unknown": "Inconnu",
-                    "awake": "Réveillé",
-                    "light_sleep": "Sommeil léger",
-                    "deep_sleep": "Sommeil profond"
-                }
-            },
-            "movement": {
-                "name": "Mouvement"
-            },
-            "movementbucket": {
-                "name": "Seuil de mouvement"
-            }
-        },
-        "switch": {
-            "base_on": {
-                "name": "Station de base allumée"
-            }
-        }
+    "abort": {
+      "already_configured": "Le compte est déjà configuré",
+      "reauth_successful": "La réauthentification a réussi",
+      "reconfigure_successful": "La reconfiguration a réussi"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurer les options pour Owlet",
+        "data": {
+          "scan_interval": "Intervalle d'interrogation (secondes)",
+          "stale_threshold": "Seuil de données obsolètes (minutes)"
+        },
+        "data_description": {
+          "scan_interval": "Secondes entre deux requêtes vers le cloud Owlet, minimum 5. Chaque interrogation coûte plusieurs appels API par chaussette, une valeur plus basse augmente le risque de limitation.",
+          "stale_threshold": "Si le cloud Owlet ne reçoit aucune nouvelle mesure pendant ce nombre de minutes, les signes vitaux deviennent indisponibles et le capteur Données obsolètes s'active. Mettez 0 pour désactiver."
+        }
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "europe": "Europe",
+        "world": "Monde"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "charging": {
+        "name": "En charge"
+      },
+      "high_hr_alrt": {
+        "name": "Alerte fréquence cardiaque élevée"
+      },
+      "low_hr_alrt": {
+        "name": "Alerte fréquence cardiaque basse"
+      },
+      "high_ox_alrt": {
+        "name": "Alerte oxygène élevé"
+      },
+      "low_ox_alrt": {
+        "name": "Alerte oxygène faible"
+      },
+      "crit_ox_alrt": {
+        "name": "Alerte oxygène critique"
+      },
+      "low_batt_alrt": {
+        "name": "Alerte batterie faible"
+      },
+      "crit_batt_alrt": {
+        "name": "Alerte batterie critique"
+      },
+      "lost_pwr_alrt": {
+        "name": "Alerte perte d'alimentation"
+      },
+      "sock_discon_alrt": {
+        "name": "Alerte chaussette déconnectée"
+      },
+      "sock_off": {
+        "name": "Chaussette retirée"
+      },
+      "awake": {
+        "name": "Réveillé"
+      },
+      "data_stale": {
+        "name": "Données obsolètes"
+      }
+    },
+    "sensor": {
+      "batterypercent": {
+        "name": "Pourcentage de batterie"
+      },
+      "signalstrength": {
+        "name": "Force du signal"
+      },
+      "o2saturation": {
+        "name": "Saturation O2"
+      },
+      "o2saturation10a": {
+        "name": "Moyenne de saturation O2 sur 10 minutes"
+      },
+      "heartrate": {
+        "name": "Fréquence cardiaque"
+      },
+      "batterymin": {
+        "name": "Autonomie de la batterie restante"
+      },
+      "skintemp": {
+        "name": "Température de la peau"
+      },
+      "sleepstate": {
+        "name": "État de sommeil",
+        "state": {
+          "unknown": "Inconnu",
+          "awake": "Réveillé",
+          "light_sleep": "Sommeil léger",
+          "deep_sleep": "Sommeil profond"
+        }
+      },
+      "movement": {
+        "name": "Mouvement"
+      },
+      "movementbucket": {
+        "name": "Seuil de mouvement"
+      },
+      "last_updated": {
+        "name": "Dernière mesure"
+      }
+    },
+    "switch": {
+      "base_on": {
+        "name": "Station de base allumée"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "L'envoi de la commande au cloud Owlet a échoué"
+    }
+  }
 }

@@ -2,15 +2,28 @@
   "config": {
     "step": {
       "user": {
+        "description": "Log in with the account you use in the Owlet app.",
         "data": {
           "region": "Region",
           "username": "Email",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "region": "Pick Europe if your Owlet account was created in the EU or UK, otherwise pick World."
         }
       },
       "reauth_confirm": {
-        "title": "Reauthentiaction required for Owlet",
+        "title": "Reauthentication required for Owlet",
+        "description": "The Owlet login for {username} is no longer valid. Enter the password again.",
         "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Owlet",
+        "description": "Change the region or log in again for {username}.",
+        "data": {
+          "region": "Region",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
@@ -20,11 +33,13 @@
       "invalid_email": "Entered email address is incorrect",
       "invalid_password": "Entered password is incorrect",
       "invalid_credentials": "Entered credentials are incorrect",
-      "unknown": "Unknown error occured"
+      "no_devices": "No supported Owlet sock found on this account",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Device already configured",
-      "reauth_successful": "Reauthentication successful"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -32,8 +47,21 @@
       "init": {
         "title": "Configure options for Owlet",
         "data": {
-          "pollinterval": "Polling interval in seconds, min 10"
+          "scan_interval": "Polling interval (seconds)",
+          "stale_threshold": "Stale data threshold (minutes)"
+        },
+        "data_description": {
+          "scan_interval": "Seconds between requests to the Owlet cloud, minimum 5. Every poll costs several API calls per sock, a lower value increases the risk of rate limiting.",
+          "stale_threshold": "When the Owlet cloud has no new reading for this many minutes, vitals become unavailable and the Data stale sensor turns on. Set to 0 to disable."
         }
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "europe": "Europe",
+        "world": "World"
       }
     }
   },
@@ -74,6 +102,9 @@
       },
       "awake": {
         "name": "Awake"
+      },
+      "data_stale": {
+        "name": "Data stale"
       }
     },
     "sensor": {
@@ -112,12 +143,20 @@
       },
       "movementbucket": {
         "name": "Movement bucket"
+      },
+      "last_updated": {
+        "name": "Last reading"
       }
     },
     "switch": {
       "base_on": {
         "name": "Base station on"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Sending the command to the Owlet cloud failed"
     }
   }
 }
