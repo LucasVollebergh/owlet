@@ -72,6 +72,27 @@ Ready-made automations, import them with one click (requires the Home Assistant 
 
 These notifications depend on Home Assistant polling the Owlet cloud and can be delayed. They do not replace the Owlet base station and app.
 
+## Dashboard
+
+[`dashboards/owlet.yaml`](dashboards/owlet.yaml) is a ready-made dashboard that only uses built-in cards, so no custom cards need to be installed. It shows:
+
+- **Now:** heart rate and O2 gauges, O2 10 minute average, skin temperature, sleep state, sock off, charging and the base station switch, plus a warning when the data is stale.
+- **Owlet alerts:** only the alerts Owlet currently reports as active.
+- **Last 12 hours:** heart rate, O2 saturation and a sleep timeline (awake, light sleep, deep sleep, sock off, data stale).
+- **Trends:** daily minimum, mean and maximum of heart rate, O2 saturation and skin temperature over 30 days, from the long-term statistics Home Assistant keeps.
+- **Device:** battery, battery remaining, signal strength and last reading.
+
+To add it:
+
+1. Go to **Settings > Dashboards > Add dashboard > New dashboard from scratch** and open it.
+2. Choose the pencil (Edit dashboard), then the three dots > **Raw configuration editor**.
+3. Paste the contents of `dashboards/owlet.yaml`.
+4. Replace every `owlet_sock_serial_number` with the entity id prefix of your sock. You find it on the device page of your sock, for example `sensor.owlet_sock_ab12cd34_heart_rate` has the prefix `owlet_sock_ab12cd34`.
+
+With more than one sock, duplicate the view and use the prefix of the other sock. Trends fill up over time: the daily statistics start from the moment the integration is installed.
+
+The gauge ranges are for display only and have no medical meaning. Alerts come from Owlet itself.
+
 ## Options
 
 **Settings > Devices & services > Owlet Smart Sock > Configure**
