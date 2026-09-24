@@ -1,6 +1,10 @@
 # Changelog
 
 <!--next-version-placeholder-->
+## Unreleased
+### Feature
+* Ready-made dashboard in `dashboards/owlet.yaml` with built-in cards only: live vitals, active Owlet alerts, the last 12 hours of heart rate, O2 and sleep state, daily min/mean/max trends over 30 days, and battery and signal.
+
 ## 2026.9.0 (2026-09-24)
 First release of the maintained fork [lucasvollebergh/owlet](https://github.com/lucasvollebergh/owlet). Drop-in replacement for ryanbdclark/owlet: same domain and unique ids. Thanks to [Ryan Clark (@ryanbdclark)](https://github.com/ryanbdclark) for creating the integration, all earlier entries below are his work.
 ### Fix
