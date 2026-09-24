@@ -2,7 +2,7 @@
 
 <!--next-version-placeholder-->
 ## 2026.9.0 (2026-09-24)
-First release of the maintained fork [lucasvollebergh/owlet](https://github.com/lucasvollebergh/owlet). Drop-in replacement for ryanbdclark/owlet: same domain and unique ids.
+First release of the maintained fork [lucasvollebergh/owlet](https://github.com/lucasvollebergh/owlet). Drop-in replacement for ryanbdclark/owlet: same domain and unique ids. Thanks to [Ryan Clark (@ryanbdclark)](https://github.com/ryanbdclark) for creating the integration, all earlier entries below are his work.
 ### Fix
 * Options dialog works again on Home Assistant 2025.12 and later (the options flow no longer sets `config_entry` itself).
 * "Invalid handler specified" when adding the integration: the integration now works with every pyowletapi 2025.4.x release, including the ones that removed `OwletEmailError` and `OwletPasswordError`.
@@ -12,10 +12,12 @@ First release of the maintained fork [lucasvollebergh/owlet](https://github.com/
 * No more fake `unknown` MAC address and hardcoded hardware version on the device.
 * Option labels match the actual options, the minimum polling interval text was wrong.
 ### Feature
-* Stale data detection: new Data stale binary sensor and Last reading sensor, vitals become unavailable when the Owlet cloud stops receiving readings.
+* Stale data detection: new Data stale binary sensor and Last reading sensor, vitals become unavailable when the Owlet cloud stops receiving readings. On the Smart Sock 2 every vital is checked against its own timestamp.
 * Configurable stale data threshold in the options.
+* Repair issue when the data stays stale for more than an hour, cleared automatically when readings return.
+* Automation blueprints: Owlet alert notification (optionally critical) and Owlet stale data notification.
 * Reconfigure flow to change region or log in again.
-* Diagnostics download with redaction of tokens and personal data.
+* Diagnostics download with redaction of tokens and personal data, including identifiers inside JSON property values.
 * Dutch translation. Removed the untranslated English copy under the Ukrainian language code.
 * Region dropdown with translated labels and a description of which region to pick.
 * Base station switch refreshes its state right after a command and shows an error when the command fails.

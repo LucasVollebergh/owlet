@@ -1,4 +1,8 @@
-"""The Owlet Smart Sock integration."""
+"""The Owlet Smart Sock integration.
+
+Originally created by Ryan Clark (https://github.com/ryanbdclark/owlet), now
+maintained at https://github.com/lucasvollebergh/owlet.
+"""
 
 from __future__ import annotations
 

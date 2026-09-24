@@ -6,7 +6,8 @@
 
 A Home Assistant custom integration for the Owlet Smart Sock 2, Smart Sock 3 and Dream Sock, using the Owlet cloud.
 
-This is the maintained continuation of [ryanbdclark/owlet](https://github.com/ryanbdclark/owlet), which was archived in July 2026. Many thanks to Ryan Clark for the original work.
+> [!NOTE]
+> This is the maintained continuation of [ryanbdclark/owlet](https://github.com/ryanbdclark/owlet) by [Ryan Clark (@ryanbdclark)](https://github.com/ryanbdclark), which was archived in July 2026. A big thank you to Ryan for building this integration and the [pyowletapi](https://github.com/ryanbdclark/pyowletapi) library it relies on, and for keeping it running for years. We are happy to take it over and keep maintaining it from here, see [Credits](#credits).
 
 > [!WARNING]
 > **This is not a medical device.** Data reaches Home Assistant by polling the Owlet cloud, which can be delayed, stop without warning or break when Owlet changes its private API. Never rely on this integration for alarms. Keep the Owlet base station and the official Owlet app as your primary alert.
@@ -56,6 +57,21 @@ Users have reported values that stop changing while the Owlet app still shows li
 - Vitals become unavailable at the same moment, so a frozen value is never shown as a live one.
 - **Last reading** (sensor) shows when the cloud last received data.
 
+### Repairs
+
+When the data stays stale for more than an hour while the sock should be sending readings, a warning appears under **Settings > System > Repairs** with the time of the last reading. It disappears by itself once fresh readings arrive, and never appears when the stale data threshold is set to 0.
+
+## Blueprints
+
+Ready-made automations, import them with one click (requires the Home Assistant Companion app for notifications):
+
+| Blueprint | What it does | Import |
+| --- | --- | --- |
+| Owlet alert notification | Notification when one of the selected Owlet alerts turns on, optionally as a critical notification that sounds on silent/do not disturb. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Flucasvollebergh%2Fowlet%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fowlet%2Fowlet_alert_notification.yaml) |
+| Owlet stale data notification | Notification when the Data stale sensor turns on (after an optional extra delay), and optionally when readings are back. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Flucasvollebergh%2Fowlet%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fowlet%2Fowlet_stale_data_notification.yaml) |
+
+These notifications depend on Home Assistant polling the Owlet cloud and can be delayed. They do not replace the Owlet base station and app.
+
 ## Options
 
 **Settings > Devices & services > Owlet Smart Sock > Configure**
@@ -85,6 +101,14 @@ The integration also supports **Reconfigure** (change region or log in again) an
 - Owlet has no public API. This integration uses the same private endpoints as the Owlet app, which Owlet can change or block at any time.
 - The Owlet Cam is not supported.
 - Only one Owlet account per Home Assistant config entry, add another entry for a second account.
+
+## Credits
+
+- **Original author:** [Ryan Clark (@ryanbdclark)](https://github.com/ryanbdclark) created this integration in [ryanbdclark/owlet](https://github.com/ryanbdclark/owlet) and the [pyowletapi](https://github.com/ryanbdclark/pyowletapi) library that talks to the Owlet cloud. Everything here builds on that work. Thank you, Ryan.
+- **Contributors to the original repository:** everyone who sent fixes and translations upstream, including [@MarjovanLier](https://github.com/MarjovanLier) (multiple devices), [@Julien80](https://github.com/Julien80) (French translation) and [@coreywillwhat](https://github.com/coreywillwhat) (10 minute oxygen average filtering).
+- **Maintainer of this fork:** [@lucasvollebergh](https://github.com/lucasvollebergh). Issues and pull requests go to [this repository](https://github.com/lucasvollebergh/owlet/issues).
+
+The original license (Apache 2.0) still applies, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## Contributing
 
