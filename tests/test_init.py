@@ -1,136 +1,102 @@
-"""Test Owlet init."""
+"""Test the Owlet setup."""
+
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
-from pyowletapi.exceptions import (
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.owlet.compat import (
     OwletAuthenticationError,
     OwletConnectionError,
     OwletDevicesError,
-    OwletError,
 )
-
-from homeassistant.components.owlet.const import (
-    CONF_OWLET_EXPIRY,
-    CONF_OWLET_REFRESH,
-    DOMAIN,
-)
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_TOKEN, CONF_REGION, CONF_USERNAME, Platform
+from custom_components.owlet.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
-from . import async_init_integration
+from .conftest import FRESH_TIME, load_json
+from .helpers import setup_integration
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+pytestmark = pytest.mark.freeze_time(FRESH_TIME)
 
 
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
-    """Test setting up entry."""
-    entry = await async_init_integration(hass)
+async def test_setup_and_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a successful setup and unload."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert entry.state == ConfigEntryState.LOADED
-
-    device_registry = dr.async_get(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "SERIAL_NUMBER")}
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
+    assert len(devices) == 1
+    device = devices[0]
+    assert device.identifiers == {(DOMAIN, "SERIAL_NUMBER")}
+    assert device.name == "Owlet Sock SERIAL_NUMBER"
+    assert device.manufacturer == "Owlet Baby Care"
+    assert device.model == "SS3-OBL-EU"
+    assert device.serial_number == "SERIAL_NUMBER"
+    assert device.hw_version == "obl"
 
-    assert device_entry.name == "Owlet Baby Care Sock"
-
-    entity_registry = er.async_get(hass)
-
-    entities = er.async_entries_for_device(entity_registry, device_entry.id)
-
-    assert len(entities) == 18
-
-    await entry.async_unload(hass)
-
-    assert entry.state == ConfigEntryState.NOT_LOADED
-
-
-async def test_async_setup_entry_new_tokens(hass: HomeAssistant) -> None:
-    """Test setting up entry and getting new tokens."""
-    entry = await async_init_integration(
-        hass, devices_fixture="get_devices_with_tokens.json"
-    )
-
-    assert entry.data == {
-        CONF_REGION: "europe",
-        CONF_USERNAME: "sample@gmail.com",
-        CONF_API_TOKEN: "new_api_token",
-        CONF_OWLET_EXPIRY: 200,
-        CONF_OWLET_REFRESH: "new_refresh_token",
-    }
-
-    assert entry.state == ConfigEntryState.LOADED
-
-    await entry.async_unload(hass)
-
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_setup_entry_auth_error(hass: HomeAssistant) -> None:
-    """Test setting up entry with auth error."""
-    entry = await async_init_integration(hass, skip_setup=True)
-
-    with patch(
-        "homeassistant.components.owlet.OwletAPI.authenticate",
-        side_effect=OwletAuthenticationError(),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert entry.state == ConfigEntryState.SETUP_ERROR
-
-        await entry.async_unload(hass)
-
-
-async def test_async_setup_entry_connection_error(hass: HomeAssistant) -> None:
-    """Test setting up entry with connection error."""
-    entry = await async_init_integration(hass, skip_setup=True)
-
-    with patch(
-        "homeassistant.components.owlet.OwletAPI.authenticate",
-        side_effect=OwletConnectionError(),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert entry.state == ConfigEntryState.SETUP_RETRY
-
-        await entry.async_unload(hass)
+@pytest.mark.parametrize(
+    ("side_effect", "state"),
+    [
+        (OwletAuthenticationError(), ConfigEntryState.SETUP_ERROR),
+        (OwletConnectionError(), ConfigEntryState.SETUP_RETRY),
+        (OwletDevicesError(), ConfigEntryState.SETUP_RETRY),
+        (TimeoutError(), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+    side_effect: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test the entry state for errors during setup."""
+    mock_owlet_api["get_devices"].side_effect = side_effect
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is state
 
 
-async def test_async_setup_entry_devices_error(hass: HomeAssistant) -> None:
-    """Test setting up entry with device error."""
-    entry = await async_init_integration(hass, skip_setup=True)
+async def test_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+) -> None:
+    """Test that invalid credentials start a reauth flow."""
+    mock_owlet_api["authenticate"].side_effect = OwletAuthenticationError()
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.owlet.OwletAPI.authenticate", return_value=None
-    ), patch(
-        "homeassistant.components.owlet.OwletAPI.get_devices",
-        side_effect=OwletDevicesError(),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert entry.state == ConfigEntryState.SETUP_ERROR
-        await entry.async_unload(hass)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
-async def test_async_setup_entry_error(hass: HomeAssistant) -> None:
-    """Test setting up entry with unknown error."""
-    entry = await async_init_integration(hass, skip_setup=True)
+async def test_refreshed_tokens_are_stored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+) -> None:
+    """Test that tokens refreshed by the coordinator end up in the entry."""
+    properties = load_json("update_properties_asleep.json")
+    properties["tokens"] = load_json("get_devices_with_tokens.json")["tokens"]
+    mock_owlet_api["get_properties"].side_effect = lambda *_: properties
 
-    with patch(
-        "homeassistant.components.owlet.OwletAPI.authenticate",
-        side_effect=OwletError(),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-        assert entry.state == ConfigEntryState.SETUP_ERROR
-
-        await entry.async_unload(hass)
+    assert mock_config_entry.data["api_token"] == "new_api_token"
+    assert mock_config_entry.data["refresh"] == "new_refresh_token"
+    assert mock_config_entry.data["expiry"] == 200

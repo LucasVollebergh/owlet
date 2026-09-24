@@ -1,0 +1,168 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Meld je aan met het account dat je in de Owlet-app gebruikt.",
+        "data": {
+          "region": "Regio",
+          "username": "E-mail",
+          "password": "Wachtwoord"
+        },
+        "data_description": {
+          "region": "Kies Europa als je Owlet-account in de EU of het VK is aangemaakt, anders Wereld."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Opnieuw aanmelden bij Owlet",
+        "description": "De Owlet-login voor {username} is niet meer geldig. Geef het wachtwoord opnieuw in.",
+        "data": {
+          "password": "Wachtwoord"
+        }
+      },
+      "reconfigure": {
+        "title": "Owlet opnieuw configureren",
+        "description": "Wijzig de regio of meld opnieuw aan voor {username}.",
+        "data": {
+          "region": "Regio",
+          "password": "Wachtwoord"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken",
+      "invalid_email": "Het ingegeven e-mailadres is niet correct",
+      "invalid_password": "Het ingegeven wachtwoord is niet correct",
+      "invalid_credentials": "De ingegeven gegevens zijn niet correct",
+      "no_devices": "Geen ondersteunde Owlet-sok gevonden op dit account",
+      "unknown": "Onverwachte fout"
+    },
+    "abort": {
+      "already_configured": "Account is al geconfigureerd",
+      "reauth_successful": "Herauthenticatie geslaagd",
+      "reconfigure_successful": "Herconfiguratie geslaagd"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties voor Owlet",
+        "data": {
+          "scan_interval": "Polling-interval (seconden)",
+          "stale_threshold": "Drempel verouderde gegevens (minuten)"
+        },
+        "data_description": {
+          "scan_interval": "Aantal seconden tussen twee aanvragen bij de Owlet-cloud, minimum 5. Elke poll kost meerdere API-calls per sok, een lagere waarde verhoogt het risico op rate limiting.",
+          "stale_threshold": "Als de Owlet-cloud zo veel minuten geen nieuwe meting heeft, worden de vitale waarden onbeschikbaar en gaat de sensor Verouderde gegevens aan. Zet op 0 om uit te schakelen."
+        }
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "europe": "Europa",
+        "world": "Wereld"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "charging": {
+        "name": "Opladen"
+      },
+      "high_hr_alrt": {
+        "name": "Alarm hoge hartslag"
+      },
+      "low_hr_alrt": {
+        "name": "Alarm lage hartslag"
+      },
+      "high_ox_alrt": {
+        "name": "Alarm hoog zuurstofgehalte"
+      },
+      "low_ox_alrt": {
+        "name": "Alarm laag zuurstofgehalte"
+      },
+      "crit_ox_alrt": {
+        "name": "Alarm kritiek zuurstofgehalte"
+      },
+      "low_batt_alrt": {
+        "name": "Alarm lage batterij"
+      },
+      "crit_batt_alrt": {
+        "name": "Alarm kritieke batterij"
+      },
+      "lost_pwr_alrt": {
+        "name": "Alarm stroomuitval"
+      },
+      "sock_discon_alrt": {
+        "name": "Alarm sok niet verbonden"
+      },
+      "sock_off": {
+        "name": "Sok uit"
+      },
+      "awake": {
+        "name": "Wakker"
+      },
+      "data_stale": {
+        "name": "Verouderde gegevens"
+      }
+    },
+    "sensor": {
+      "batterypercent": {
+        "name": "Batterijniveau"
+      },
+      "signalstrength": {
+        "name": "Signaalsterkte"
+      },
+      "o2saturation": {
+        "name": "O2-saturatie"
+      },
+      "o2saturation10a": {
+        "name": "O2-saturatie gemiddelde 10 minuten"
+      },
+      "heartrate": {
+        "name": "Hartslag"
+      },
+      "batterymin": {
+        "name": "Resterende batterijduur"
+      },
+      "skintemp": {
+        "name": "Huidtemperatuur"
+      },
+      "sleepstate": {
+        "name": "Slaaptoestand",
+        "state": {
+          "unknown": "Onbekend",
+          "awake": "Wakker",
+          "light_sleep": "Lichte slaap",
+          "deep_sleep": "Diepe slaap"
+        }
+      },
+      "movement": {
+        "name": "Beweging"
+      },
+      "movementbucket": {
+        "name": "Bewegingscategorie"
+      },
+      "last_updated": {
+        "name": "Laatste meting"
+      }
+    },
+    "switch": {
+      "base_on": {
+        "name": "Basisstation aan"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Het commando naar de Owlet-cloud versturen is mislukt"
+    }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Owlet-gegevens zijn al lang niet meer bijgewerkt",
+      "description": "{name} heeft sinds {last_reading} geen nieuwe meting meer naar de Owlet-cloud gestuurd, terwijl de sok niet oplaadt en het basisstation aan staat.\n\nControleer of het basisstation stroom en wifi heeft en of de Owlet-app live gegevens toont. Deze melding verdwijnt vanzelf zodra er nieuwe metingen binnenkomen."
+    }
+  }
+}

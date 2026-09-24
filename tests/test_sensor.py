@@ -1,126 +1,95 @@
-"""Test Owlet Sensor."""
+"""Test the Owlet sensors."""
+
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from . import async_init_integration
+from .conftest import FRESH_TIME
+from .helpers import entity_id, setup_integration, state
 
-
-async def test_sensors_asleep(hass: HomeAssistant) -> None:
-    """Test sensor values."""
-    await async_init_integration(
-        hass, properties_fixture="update_properties_asleep.json"
-    )
-
-    assert len(hass.states.async_all("sensor")) == 8
-
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
-        == "50.0"
-    )
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
-        == "400.0"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "97.0"
-    assert hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "99.0"
-    assert (
-        hass.states.get(
-            "sensor.owlet_baby_care_sock_o2_saturation_10_minute_average"
-        ).state
-        == "97.0"
-    )
-
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "30.0"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_skin_temperature").state == "34"
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state
-        == "light_sleep"
-    )
+pytestmark = pytest.mark.freeze_time(FRESH_TIME)
 
 
-async def test_sensors_awake(hass: HomeAssistant) -> None:
-    """Test sensor values."""
-    await async_init_integration(
-        hass, properties_fixture="update_properties_awake.json"
-    )
-
-    assert len(hass.states.async_all("sensor")) == 8
-
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
-        == "80.0"
-    )
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
-        == "600.0"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "110.0"
-    assert hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "98.0"
-    assert (
-        hass.states.get(
-            "sensor.owlet_baby_care_sock_o2_saturation_10_minute_average"
-        ).state
-        == "98.0"
-    )
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "34.0"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_skin_temperature").state == "35"
-    assert hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state == "awake"
+def _state(hass: HomeAssistant, key: str) -> str:
+    return state(hass, "sensor", key).state
 
 
-async def test_sensors_charging(hass: HomeAssistant) -> None:
-    """Test sensor values."""
-    await async_init_integration(
-        hass, properties_fixture="update_properties_charging.json"
-    )
+async def test_sensors_asleep(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor values for a sleeping baby."""
+    await setup_integration(hass, mock_config_entry)
 
-    assert len(hass.states.async_all("sensor")) == 8
+    assert _state(hass, "battery_percentage") == "50.0"
+    assert _state(hass, "battery_minutes") == "400.0"
+    assert _state(hass, "heart_rate") == "97.0"
+    assert _state(hass, "oxygen_saturation") == "99.0"
+    assert _state(hass, "oxygen_10_av") == "97.0"
+    assert _state(hass, "signal_strength") == "30.0"
+    assert _state(hass, "skin_temperature") == "34"
+    assert _state(hass, "sleep_state") == "light_sleep"
+    assert _state(hass, "last_updated") == "2023-05-24T14:15:50+00:00"
 
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
-        == "100.0"
-    )
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
-        == "unknown"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "unknown"
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "unknown"
-    )
-    assert (
-        hass.states.get(
-            "sensor.owlet_baby_care_sock_o2_saturation_10_minute_average"
-        ).state
-        == "unknown"
-    )
-
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "34.0"
-    )
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_skin_temperature").state
-        == "unknown"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state == "unknown"
+    # Unique ids must stay stable so the fork is a drop-in replacement.
+    entry = entity_registry.async_get(entity_id(hass, "sensor", "heart_rate"))
+    assert entry.unique_id == "SERIAL_NUMBER-heart_rate"
+    # Movement sensors are disabled by default.
+    assert entity_registry.async_get(entity_id(hass, "sensor", "movement")).disabled
+    assert state(hass, "sensor", "movement") is None
 
 
-async def test_sensors_v2(hass: HomeAssistant) -> None:
-    """Test sensor values."""
-    await async_init_integration(hass, properties_fixture="update_properties_v2.json")
-    assert len(hass.states.async_all("sensor")) == 4
+@pytest.mark.parametrize("properties_fixture", ["update_properties_awake.json"])
+async def test_sensors_awake(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+) -> None:
+    """Test sensor values for an awake baby."""
+    await setup_integration(hass, mock_config_entry)
 
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state == "29"
-    )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "145"
-    assert hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "99"
+    assert _state(hass, "heart_rate") == "110.0"
+    assert _state(hass, "sleep_state") == "awake"
 
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "98.0"
-    )
 
+@pytest.mark.parametrize("properties_fixture", ["update_properties_charging.json"])
+async def test_sensors_charging(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+) -> None:
+    """Test vitals are unavailable while the sock charges."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert _state(hass, "battery_percentage") == "100.0"
+    assert _state(hass, "signal_strength") == "34.0"
+    assert _state(hass, "heart_rate") == STATE_UNAVAILABLE
+    assert _state(hass, "oxygen_saturation") == STATE_UNAVAILABLE
+    assert _state(hass, "oxygen_10_av") == STATE_UNAVAILABLE
+
+
+@pytest.mark.freeze_time("2023-11-20T14:06:00+00:00")
+@pytest.mark.parametrize("properties_fixture", ["update_properties_v2.json"])
+async def test_sensors_v2(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_owlet_api: dict[str, AsyncMock],
+) -> None:
+    """Test a Smart Sock 2, where every vital has its own timestamp."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert _state(hass, "heart_rate") == "145"
+    assert _state(hass, "last_updated") == "2023-11-20T14:05:01+00:00"
+    # OXYGEN_LEVEL was last updated at 12:22, a fresh heart rate must not
+    # keep that old value looking live.
+    assert _state(hass, "oxygen_saturation") == STATE_UNAVAILABLE
+    assert state(hass, "binary_sensor", "data_stale").state == "on"

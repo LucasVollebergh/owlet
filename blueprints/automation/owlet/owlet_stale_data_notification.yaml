@@ -1,0 +1,85 @@
+blueprint:
+  name: Owlet stale data notification
+  description: >-
+    Send a notification when Home Assistant no longer receives fresh readings
+    from an Owlet sock (the Data stale sensor turns on), and optionally when the
+    readings are back.
+  domain: automation
+  source_url: https://github.com/lucasvollebergh/owlet/blob/main/blueprints/automation/owlet/owlet_stale_data_notification.yaml
+  homeassistant:
+    min_version: "2025.12.0"
+  input:
+    stale_sensor:
+      name: Data stale sensor
+      description: The Data stale binary sensor of the Owlet sock.
+      selector:
+        entity:
+          filter:
+            - integration: owlet
+              domain: binary_sensor
+              device_class: problem
+    delay:
+      name: Extra delay
+      description: Only notify when the data stays stale this much longer.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 120
+          unit_of_measurement: minutes
+    notify_device:
+      name: Phone
+      description: Device with the Home Assistant Companion app that receives the notification.
+      selector:
+        device:
+          filter:
+            - integration: mobile_app
+    notify_recovered:
+      name: Notify when readings are back
+      default: true
+      selector:
+        boolean:
+
+triggers:
+  - trigger: state
+    entity_id: !input stale_sensor
+    from: "off"
+    to: "on"
+    for:
+      minutes: !input delay
+    id: stale
+  - trigger: state
+    entity_id: !input stale_sensor
+    from: "on"
+    to: "off"
+    id: recovered
+
+variables:
+  notify_recovered: !input notify_recovered
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: stale
+        sequence:
+          - domain: mobile_app
+            type: notify
+            device_id: !input notify_device
+            title: Owlet data is stale
+            message: >-
+              Home Assistant has not received new Owlet readings for a while.
+              Check the base station and the Owlet app.
+      - conditions:
+          - condition: trigger
+            id: recovered
+          - condition: template
+            value_template: "{{ notify_recovered }}"
+        sequence:
+          - domain: mobile_app
+            type: notify
+            device_id: !input notify_device
+            title: Owlet data is back
+            message: Home Assistant receives live Owlet readings again.
+
+mode: single
