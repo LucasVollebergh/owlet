@@ -7,12 +7,12 @@ from unittest.mock import AsyncMock
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.owlet.compat import (
+from custom_components.owlet.const import DOMAIN
+from custom_components.owlet.owletapi.exceptions import (
     OwletAuthenticationError,
     OwletConnectionError,
     OwletDevicesError,
 )
-from custom_components.owlet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr

@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from pyowletapi.api import OwletAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -26,21 +25,21 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import OwletConfigEntry
-from .compat import (
-    HAS_SPECIFIC_CREDENTIAL_ERRORS,
-    OWLET_CREDENTIAL_ERRORS,
-    OwletConnectionError,
-    OwletDevicesError,
-    OwletEmailError,
-    OwletPasswordError,
-)
 from .const import (
     CONF_STALE_THRESHOLD,
     DEFAULT_STALE_THRESHOLD,
     DOMAIN,
     MIN_POLLING_INTERVAL,
+    OWLET_CREDENTIAL_ERRORS,
     POLLING_INTERVAL,
     REGIONS,
+)
+from .owletapi.api import OwletAPI
+from .owletapi.exceptions import (
+    OwletConnectionError,
+    OwletDevicesError,
+    OwletEmailError,
+    OwletPasswordError,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,14 +97,13 @@ async def _async_login(
 def _credential_error(err: Exception) -> dict[str, str]:
     """Map a login failure to the matching form field.
 
-    Newer pyowletapi releases no longer tell an unknown email apart from a wrong
-    password, in that case only a generic error can be shown.
+    Accounts with email enumeration protection do not tell an unknown email
+    apart from a wrong password, then only a generic error can be shown.
     """
-    if HAS_SPECIFIC_CREDENTIAL_ERRORS:
-        if isinstance(err, OwletEmailError):
-            return {CONF_USERNAME: "invalid_email"}
-        if isinstance(err, OwletPasswordError):
-            return {CONF_PASSWORD: "invalid_password"}
+    if isinstance(err, OwletEmailError):
+        return {CONF_USERNAME: "invalid_email"}
+    if isinstance(err, OwletPasswordError):
+        return {CONF_PASSWORD: "invalid_password"}
     return {"base": "invalid_credentials"}
 
 

@@ -74,23 +74,26 @@ def mock_owlet_api(properties_fixture: str) -> Generator[dict[str, AsyncMock]]:
     """Mock the network calls of the Owlet API."""
     with (
         patch(
-            "pyowletapi.api.OwletAPI.authenticate", new_callable=AsyncMock
+            "custom_components.owlet.owletapi.api.OwletAPI.authenticate",
+            new_callable=AsyncMock,
         ) as authenticate,
         patch(
-            "pyowletapi.api.OwletAPI.validate_authentication", new_callable=AsyncMock
+            "custom_components.owlet.owletapi.api.OwletAPI.validate_authentication",
+            new_callable=AsyncMock,
         ) as validate,
         patch(
-            "pyowletapi.api.OwletAPI.get_devices",
+            "custom_components.owlet.owletapi.api.OwletAPI.get_devices",
             new_callable=AsyncMock,
             return_value=load_json("get_devices.json"),
         ) as get_devices,
         patch(
-            "pyowletapi.api.OwletAPI.get_properties",
+            "custom_components.owlet.owletapi.api.OwletAPI.get_properties",
             new_callable=AsyncMock,
             side_effect=lambda *_: load_json(properties_fixture),
         ) as get_properties,
         patch(
-            "pyowletapi.api.OwletAPI.post_command", new_callable=AsyncMock
+            "custom_components.owlet.owletapi.api.OwletAPI.post_command",
+            new_callable=AsyncMock,
         ) as post_command,
     ):
         yield {

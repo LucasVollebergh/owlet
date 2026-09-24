@@ -1,4 +1,3 @@
 pytest-homeassistant-custom-component
-pyowletapi==2025.4.1
 ruff
 pytest-cov

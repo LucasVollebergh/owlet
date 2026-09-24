@@ -5,7 +5,9 @@
 First release of the maintained fork [lucasvollebergh/owlet](https://github.com/lucasvollebergh/owlet). Drop-in replacement for ryanbdclark/owlet: same domain and unique ids. Thanks to [Ryan Clark (@ryanbdclark)](https://github.com/ryanbdclark) for creating the integration, all earlier entries below are his work.
 ### Fix
 * Options dialog works again on Home Assistant 2025.12 and later (the options flow no longer sets `config_entry` itself).
-* "Invalid handler specified" when adding the integration: the integration now works with every pyowletapi 2025.4.x release, including the ones that removed `OwletEmailError` and `OwletPasswordError`.
+* "Invalid handler specified" when adding the integration: the Owlet API client now ships inside the integration (a maintained copy of pyowletapi, see [lucasvollebergh/pyowletapi](https://github.com/lucasvollebergh/pyowletapi)), so no external `pyowletapi` version can break it anymore.
+* Refreshed Owlet tokens are no longer lost while polling, so a restart does not need an extra login.
+* One poll costs fewer requests to the Owlet cloud: the extra token check before every request is gone. Rejected tokens are refreshed and retried once, server errors no longer cause a re-login loop, and requests have a timeout.
 * Expired logins during polling now start a reauthentication flow instead of failing with a `KeyError`.
 * Setup without supported socks or with a connection error now retries instead of failing permanently.
 * The reauthentication dialog shows an error instead of silently doing nothing when login fails.

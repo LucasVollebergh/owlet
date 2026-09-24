@@ -7,7 +7,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
-from pyowletapi.sock import Sock
 
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -16,17 +15,19 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .compat import OWLET_CREDENTIAL_ERRORS, OwletConnectionError, OwletError
 from .const import (
     CONF_STALE_THRESHOLD,
     DEFAULT_STALE_THRESHOLD,
     DOMAIN,
     FRESHNESS_PROPERTIES,
+    OWLET_CREDENTIAL_ERRORS,
     POLLING_INTERVAL,
     STALE_ISSUE_AFTER,
     VITAL_PROPERTIES_V2,
     VITALS_PROPERTY_V3,
 )
+from .owletapi.exceptions import OwletConnectionError, OwletError
+from .owletapi.sock import Sock
 
 if TYPE_CHECKING:
     from . import OwletConfigEntry

@@ -12,11 +12,11 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from custom_components.owlet.compat import (
+from custom_components.owlet.const import CONF_STALE_THRESHOLD, DOMAIN
+from custom_components.owlet.owletapi.exceptions import (
     OwletAuthenticationError,
     OwletConnectionError,
 )
-from custom_components.owlet.const import CONF_STALE_THRESHOLD, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant

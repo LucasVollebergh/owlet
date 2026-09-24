@@ -85,7 +85,7 @@ The integration also supports **Reconfigure** (change region or log in again) an
 
 ## Troubleshooting
 
-- **"Invalid handler specified"** when adding the integration: an incompatible `pyowletapi` version was installed by an older release. Install the latest release of this repository and restart.
+- **"Invalid handler specified"** when adding the integration: this came from an incompatible external `pyowletapi` version in older releases. The Owlet API client now ships inside the integration, install the latest release of this repository and restart.
 - **Values stop changing**: check the Data stale and Last reading entities. If the Owlet app shows fresh data but Home Assistant does not, download diagnostics (device page > three dots > Download diagnostics) and open an issue. Diagnostics redact tokens, email, serial numbers, MAC addresses and baby details.
 - Enable debug logging:
 
@@ -93,7 +93,7 @@ The integration also supports **Reconfigure** (change region or log in again) an
   logger:
     logs:
       custom_components.owlet: debug
-      pyowletapi: debug
+      custom_components.owlet.owletapi: debug
   ```
 
 ## Known limitations
@@ -106,6 +106,7 @@ The integration also supports **Reconfigure** (change region or log in again) an
 
 - **Original author:** [Ryan Clark (@ryanbdclark)](https://github.com/ryanbdclark) created this integration in [ryanbdclark/owlet](https://github.com/ryanbdclark/owlet) and the [pyowletapi](https://github.com/ryanbdclark/pyowletapi) library that talks to the Owlet cloud. Everything here builds on that work. Thank you, Ryan.
 - **Contributors to the original repository:** everyone who sent fixes and translations upstream, including [@MarjovanLier](https://github.com/MarjovanLier) (multiple devices), [@Julien80](https://github.com/Julien80) (French translation) and [@coreywillwhat](https://github.com/coreywillwhat) (10 minute oxygen average filtering).
+- **Owlet API client:** the integration ships its own copy of [lucasvollebergh/pyowletapi](https://github.com/lucasvollebergh/pyowletapi) (pyowletapi-ng), the maintained continuation of Ryan's library, in `custom_components/owlet/owletapi`, so Home Assistant does not need to install anything from PyPI.
 - **Maintainer of this fork:** [@lucasvollebergh](https://github.com/lucasvollebergh). Issues and pull requests go to [this repository](https://github.com/lucasvollebergh/owlet/issues).
 
 The original license (Apache 2.0) still applies, see [LICENSE](LICENSE) and [NOTICE](NOTICE).

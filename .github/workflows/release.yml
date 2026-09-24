@@ -3,6 +3,12 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the v prefix (for example 2026.9.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -14,19 +20,60 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set version in manifest from tag
+      - name: Determine version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          jq --arg version "$version" '.version = $version' \
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            version="${INPUT_VERSION#v}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version: $version" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set version in manifest
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          jq --arg version "$VERSION" '.version = $version' \
             custom_components/owlet/manifest.json > manifest.tmp
           mv manifest.tmp custom_components/owlet/manifest.json
+
+      - name: Extract release notes from CHANGELOG
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          awk -v version="$VERSION" '
+            index($0, "## " version " ") == 1 || $0 == "## " version { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "See CHANGELOG.md for details." > release_notes.md
+          fi
 
       - name: Build zip
         run: |
           cd custom_components/owlet
           zip -r "$GITHUB_WORKSPACE/owlet.zip" . -x "__pycache__/*"
 
-      - name: Upload zip to release
+      - name: Upload zip to the published release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
+          files: owlet.zip
+
+      - name: Create release with zip
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: v${{ steps.version.outputs.version }}
+          body_path: release_notes.md
           files: owlet.zip
