@@ -6,3 +6,7 @@ in https://github.com/ryanbdclark/owlet, licensed under the Apache License 2.0.
 Modified and maintained since September 2026 by Lucas Vollebergh
 (https://github.com/lucasvollebergh) in https://github.com/lucasvollebergh/owlet.
 The changes are listed in CHANGELOG.md.
+
+custom_components/owlet/owletapi contains a copy of pyowletapi-ng
+(https://github.com/lucasvollebergh/pyowletapi), based on pyowletapi by
+Ryan Clark, MIT licensed, see custom_components/owlet/owletapi/LICENSE.

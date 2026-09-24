@@ -8,19 +8,18 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.owlet.compat import (
-    HAS_SPECIFIC_CREDENTIAL_ERRORS,
-    OwletConnectionError,
-    OwletCredentialsError,
-    OwletDevicesError,
-    OwletEmailError,
-    OwletPasswordError,
-)
 from custom_components.owlet.const import (
     CONF_STALE_THRESHOLD,
     DEFAULT_STALE_THRESHOLD,
     DOMAIN,
     POLLING_INTERVAL,
+)
+from custom_components.owlet.owletapi.exceptions import (
+    OwletConnectionError,
+    OwletCredentialsError,
+    OwletDevicesError,
+    OwletEmailError,
+    OwletPasswordError,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -87,11 +86,10 @@ CREDENTIAL_CASES = [
     (TimeoutError(), {"base": "cannot_connect"}),
     (ValueError(), {"base": "unknown"}),
 ]
-if HAS_SPECIFIC_CREDENTIAL_ERRORS:
-    CREDENTIAL_CASES += [
-        (OwletEmailError(), {CONF_USERNAME: "invalid_email"}),
-        (OwletPasswordError(), {CONF_PASSWORD: "invalid_password"}),
-    ]
+CREDENTIAL_CASES += [
+    (OwletEmailError(), {CONF_USERNAME: "invalid_email"}),
+    (OwletPasswordError(), {CONF_PASSWORD: "invalid_password"}),
+]
 
 
 @pytest.mark.parametrize(("side_effect", "errors"), CREDENTIAL_CASES)

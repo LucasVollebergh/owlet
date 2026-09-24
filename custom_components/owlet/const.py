@@ -3,6 +3,8 @@
 from datetime import timedelta
 from typing import Final
 
+from .owletapi.exceptions import OwletAuthenticationError, OwletCredentialsError
+
 DOMAIN: Final = "owlet"
 
 CONF_OWLET_EXPIRY: Final = "expiry"
@@ -42,3 +44,7 @@ VITAL_PROPERTIES_V2: Final = {
     "heart_rate": "HEART_RATE",
     "oxygen_saturation": "OXYGEN_LEVEL",
 }
+
+# Errors that mean the stored login is no longer valid. OwletEmailError and
+# OwletPasswordError are subclasses of OwletCredentialsError.
+OWLET_CREDENTIAL_ERRORS: Final = (OwletAuthenticationError, OwletCredentialsError)

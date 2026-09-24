@@ -6,17 +6,16 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from pyowletapi.sock import Sock
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OwletConfigEntry
-from .compat import OwletError
 from .coordinator import OwletCoordinator
 from .entity import OwletBaseEntity
+from .owletapi.exceptions import OwletError
+from .owletapi.sock import Sock
 
 PARALLEL_UPDATES = 1
 
