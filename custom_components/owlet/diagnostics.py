@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -27,7 +28,29 @@ TO_REDACT = {
     "LONGITUDE",
     "BLE_MAC_ID",
     "LOCAL_BLE_MAC_ID",
+    "smac",
+    "bmac",
+    "ssid",
 }
+
+
+def _redact_raw_properties(raw: dict[str, Any]) -> dict[str, Any]:
+    """Redact raw Ayla properties, including identifiers inside JSON string values.
+
+    Several properties (for example CONFIG_STATUS) carry a JSON document as a
+    string value, which async_redact_data cannot look into.
+    """
+    redacted = async_redact_data(raw, TO_REDACT)
+    for prop in redacted.values():
+        if not isinstance(prop, dict) or not isinstance(prop.get("value"), str):
+            continue
+        try:
+            decoded = json.loads(prop["value"])
+        except ValueError:
+            continue
+        if isinstance(decoded, dict):
+            prop["value"] = json.dumps(async_redact_data(decoded, TO_REDACT))
+    return redacted
 
 
 async def async_get_config_entry_diagnostics(
@@ -51,9 +74,7 @@ async def async_get_config_entry_diagnostics(
                 "last_updated": last_updated.isoformat() if last_updated else None,
                 "is_stale": coordinator.is_stale,
                 "properties": sock.properties,
-                "raw_properties": async_redact_data(
-                    sock.raw_properties or {}, TO_REDACT
-                ),
+                "raw_properties": _redact_raw_properties(sock.raw_properties or {}),
             }
         )
 

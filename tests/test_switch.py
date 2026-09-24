@@ -18,11 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import FRESH_TIME
-from .helpers import ENTITY_PREFIX, setup_integration
+from .helpers import entity_id, setup_integration
 
 pytestmark = pytest.mark.freeze_time(FRESH_TIME)
-
-BASE_STATION = f"switch.{ENTITY_PREFIX}_base_station_on"
 
 
 async def test_base_station_switch(
@@ -32,12 +30,13 @@ async def test_base_station_switch(
 ) -> None:
     """Test turning the base station on and off."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(BASE_STATION).state == STATE_ON
+    base_station = entity_id(hass, "switch", "base_station_on")
+    assert hass.states.get(base_station).state == STATE_ON
 
     polls = mock_owlet_api["get_properties"].call_count
     for service in (SERVICE_TURN_OFF, SERVICE_TURN_ON):
         await hass.services.async_call(
-            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: BASE_STATION}, blocking=True
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: base_station}, blocking=True
         )
     await hass.async_block_till_done()
 
@@ -55,12 +54,13 @@ async def test_base_station_switch_error(
 ) -> None:
     """Test a failing command raises a user facing error."""
     await setup_integration(hass, mock_config_entry)
+    base_station = entity_id(hass, "switch", "base_station_on")
     mock_owlet_api["post_command"].side_effect = OwletConnectionError()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: BASE_STATION},
+            {ATTR_ENTITY_ID: base_station},
             blocking=True,
         )

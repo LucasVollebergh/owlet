@@ -41,3 +41,6 @@ async def test_diagnostics(
     assert sock["properties"]["heart_rate"] == 97.0
     assert "SERIAL_NUMBER" not in str(result)
     assert sock["raw_properties"]["REAL_TIME_VITALS"]["device_key"] == REDACTED
+    # MAC addresses hidden inside a JSON string value are redacted too.
+    assert "D0ECE231F766" not in str(result)
+    assert "F832C96E47EF" not in str(result)

@@ -150,9 +150,9 @@ class OwletSensor(OwletBaseEntity, SensorEntity):
             return False
         if self.entity_description.available_during_charging:
             return True
-        return (
-            not self.sock.properties.get("charging") and not self.coordinator.is_stale
-        )
+        return not self.sock.properties.get(
+            "charging"
+        ) and not self.coordinator.is_reading_stale(self.entity_description.key)
 
     @property
     def native_value(self) -> StateType:

@@ -29,3 +29,12 @@ FRESHNESS_PROPERTIES: Final = (
     "OXYGEN_LEVEL",
     "BATT_LEVEL",
 )
+
+# The Smart Sock 3 reports all vitals in one property. The Smart Sock 2 reports
+# each vital as its own property with its own timestamp, so staleness has to be
+# checked per vital there.
+VITALS_PROPERTY_V3: Final = "REAL_TIME_VITALS"
+VITAL_PROPERTIES_V2: Final = {
+    "heart_rate": "HEART_RATE",
+    "oxygen_saturation": "OXYGEN_LEVEL",
+}

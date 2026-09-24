@@ -21,13 +21,13 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import FRESH_TIME
-from .helpers import ENTITY_PREFIX, setup_integration
+from .helpers import setup_integration, state
 
 pytestmark = pytest.mark.freeze_time(FRESH_TIME)
 
-HEART_RATE = f"sensor.{ENTITY_PREFIX}_heart_rate"
-BATTERY = f"sensor.{ENTITY_PREFIX}_battery_percentage"
-STALE = f"binary_sensor.{ENTITY_PREFIX}_data_stale"
+HEART_RATE = ("sensor", "heart_rate")
+BATTERY = ("sensor", "battery_percentage")
+STALE = ("binary_sensor", "data_stale")
 
 
 async def test_connection_error_marks_unavailable(
@@ -38,13 +38,13 @@ async def test_connection_error_marks_unavailable(
 ) -> None:
     """Test entities become unavailable when polling fails and recover after."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(HEART_RATE).state == "97.0"
+    assert state(hass, *HEART_RATE).state == "97.0"
 
     mock_owlet_api["get_properties"].side_effect = OwletConnectionError()
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(HEART_RATE).state == STATE_UNAVAILABLE
+    assert state(hass, *HEART_RATE).state == STATE_UNAVAILABLE
 
 
 async def test_auth_error_during_poll_starts_reauth(
@@ -73,17 +73,17 @@ async def test_stale_data(
 ) -> None:
     """Test vitals turn unavailable once the cloud stops receiving readings."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(STALE).state == STATE_OFF
-    assert hass.states.get(HEART_RATE).state == "97.0"
+    assert state(hass, *STALE).state == STATE_OFF
+    assert state(hass, *HEART_RATE).state == "97.0"
 
     freezer.tick(timedelta(minutes=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(STALE).state == STATE_ON
-    assert hass.states.get(HEART_RATE).state == STATE_UNAVAILABLE
+    assert state(hass, *STALE).state == STATE_ON
+    assert state(hass, *HEART_RATE).state == STATE_UNAVAILABLE
     # Battery is still meaningful, it is not a live vital.
-    assert hass.states.get(BATTERY).state == "50.0"
+    assert state(hass, *BATTERY).state == "50.0"
 
 
 @pytest.mark.parametrize("properties_fixture", ["update_properties_charging.json"])
@@ -96,4 +96,4 @@ async def test_not_stale_while_charging(
     """Test a charging sock is never reported as stale."""
     freezer.tick(timedelta(hours=2))
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(STALE).state == STATE_OFF
+    assert state(hass, *STALE).state == STATE_OFF

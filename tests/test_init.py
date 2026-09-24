@@ -33,8 +33,12 @@ async def test_setup_and_unload(
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL_NUMBER")})
-    assert device is not None
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 1
+    device = devices[0]
+    assert device.identifiers == {(DOMAIN, "SERIAL_NUMBER")}
     assert device.name == "Owlet Sock SERIAL_NUMBER"
     assert device.manufacturer == "Owlet Baby Care"
     assert device.model == "SS3-OBL-EU"
