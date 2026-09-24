@@ -1,6 +1,11 @@
 # Changelog
 
 <!--next-version-placeholder-->
+## Unreleased
+### Feature
+* Dutch dashboard in `dashboards/owlet_nl.yaml`: a live view with trend graphs on the heart rate, O2 and skin temperature tiles, sock status and active Owlet alerts, and a trends view with the last 12 hours, sleep, daily statistics and battery.
+* Screenshots of the dashboard and step-by-step installation instructions in the README.
+
 ## 2026.9.1 (2026-09-24)
 ### Feature
 * Ready-made dashboard in `dashboards/owlet.yaml` with built-in cards only: live vitals, active Owlet alerts, the last 12 hours of heart rate, O2 and sleep state, daily min/mean/max trends over 30 days, and battery and signal.

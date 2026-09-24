@@ -4,6 +4,14 @@
 [![hacs][hacsbadge]][hacs]
 [![License][license-shield]][license]
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/LucasVollebergh/owlet/main/docs/images/dashboard-live.png" alt="Live view with heart rate, oxygen and skin temperature trend graphs" width="30%">
+  <img src="https://raw.githubusercontent.com/LucasVollebergh/owlet/main/docs/images/dashboard-trends.png" alt="Heart rate and oxygen over the last 12 hours" width="30%">
+  <img src="https://raw.githubusercontent.com/LucasVollebergh/owlet/main/docs/images/dashboard-sleep.png" alt="Sleep timeline and skin temperature history" width="30%">
+</p>
+
+<p align="center"><em>The included <a href="#dashboard">dashboard</a> (Dutch version). Built-in cards only, no custom cards needed.</em></p>
+
 A Home Assistant custom integration for the Owlet Smart Sock 2, Smart Sock 3 and Dream Sock, using the Owlet cloud.
 
 > [!NOTE]
@@ -74,24 +82,34 @@ These notifications depend on Home Assistant polling the Owlet cloud and can be 
 
 ## Dashboard
 
-[`dashboards/owlet.yaml`](dashboards/owlet.yaml) is a ready-made dashboard that only uses built-in cards, so no custom cards need to be installed. It shows:
+Two ready-made dashboards are included. Both only use built-in cards, so no custom cards need to be installed.
 
-- **Now:** heart rate and O2 gauges, O2 10 minute average, skin temperature, sleep state, sock off, charging and the base station switch, plus a warning when the data is stale.
-- **Owlet alerts:** only the alerts Owlet currently reports as active.
-- **Last 12 hours:** heart rate, O2 saturation and a sleep timeline (awake, light sleep, deep sleep, sock off, data stale).
-- **Trends:** daily minimum, mean and maximum of heart rate, O2 saturation and skin temperature over 30 days, from the long-term statistics Home Assistant keeps.
-- **Device:** battery, battery remaining, signal strength and last reading.
+| File | Language | What it shows |
+| --- | --- | --- |
+| [`dashboards/owlet_nl.yaml`](dashboards/owlet_nl.yaml) | Dutch | Two views. **Baby:** heart rate, O2 and skin temperature tiles with 6 hour trend graphs, sleep state, awake, battery, sock and base station status, and Owlet alerts that only show while active. **Trends:** the last 12 hours of heart rate, O2 and skin temperature, a sleep timeline, daily min/mean/max over 30 days and 48 hours of battery. This is the dashboard in the screenshots above. |
+| [`dashboards/owlet.yaml`](dashboards/owlet.yaml) | English | One view with heart rate and O2 gauges, active Owlet alerts, the last 12 hours of heart rate, O2 and sleep, daily min/mean/max of heart rate, O2 and skin temperature over 30 days, and battery and signal. |
 
-To add it:
+Pick the file that matches the language of your Home Assistant. Home Assistant generates entity ids from the entity names in the language it runs in, so a Dutch installation has `sensor.<prefix>_hartslag` and an English one `sensor.<prefix>_heart_rate`.
 
-1. Go to **Settings > Dashboards > Add dashboard > New dashboard from scratch** and open it.
-2. Choose the pencil (Edit dashboard), then the three dots > **Raw configuration editor**.
-3. Paste the contents of `dashboards/owlet.yaml`.
-4. Replace every `owlet_sock_serial_number` with the entity id prefix of your sock. You find it on the device page of your sock, for example `sensor.owlet_sock_ab12cd34_heart_rate` has the prefix `owlet_sock_ab12cd34`. Newer Home Assistant releases put the area in front, then `sensor.nursery_owlet_sock_ab12cd34_heart_rate` has the prefix `nursery_owlet_sock_ab12cd34`.
+### Installing a dashboard
 
-With more than one sock, duplicate the view and use the prefix of the other sock. Trends fill up over time: the daily statistics start from the moment the integration is installed.
+1. **Find your prefix.** Go to **Settings > Devices & services > Owlet Smart Sock**, open your sock and click the heart rate entity, then the cog. The entity id is shown there. The prefix is everything between `sensor.` and the entity name:
 
-The gauge ranges are for display only and have no medical meaning. Alerts come from Owlet itself.
+   | Entity id | Prefix |
+   | --- | --- |
+   | `sensor.owlet_sock_ab12cd34_heart_rate` | `owlet_sock_ab12cd34` |
+   | `sensor.nursery_owlet_sock_ab12cd34_heart_rate` (newer releases add the area) | `nursery_owlet_sock_ab12cd34` |
+   | `sensor.slaapkamer_owlet_sok_hartslag` (Dutch, renamed device) | `slaapkamer_owlet_sok` |
+
+2. **Prepare the YAML.** Open the dashboard file on GitHub, copy it into a text editor and replace every `owlet_sock_serial_number` with your prefix (find and replace all).
+3. **Create the dashboard.** Go to **Settings > Dashboards > Add dashboard > New dashboard from scratch**, give it a name and open it from the sidebar.
+4. **Paste it.** Choose the pencil (Edit dashboard), then the three dots > **Raw configuration editor**, replace everything with your YAML and save.
+
+A card that says "Entity not available" means that entity id does not match: check it on the device page and correct it in the raw configuration editor. The critical oxygen and critical battery alerts only exist on socks that report them, their cards stay hidden otherwise.
+
+With more than one sock, duplicate the views and use the prefix of the other sock. The daily statistics start from the moment the integration is installed, so the trends fill up over time.
+
+Gauge ranges and trend graphs are for display only and have no medical meaning. Alerts come from Owlet itself.
 
 ## Options
 
