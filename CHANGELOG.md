@@ -1,7 +1,7 @@
 # Changelog
 
 <!--next-version-placeholder-->
-## Unreleased
+## 2026.9.1 (2026-09-24)
 ### Feature
 * Ready-made dashboard in `dashboards/owlet.yaml` with built-in cards only: live vitals, active Owlet alerts, the last 12 hours of heart rate, O2 and sleep state, daily min/mean/max trends over 30 days, and battery and signal.
 
