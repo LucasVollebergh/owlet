@@ -6,7 +6,8 @@
 #   1. Settings > Dashboards > Add dashboard > New dashboard from scratch.
 #   2. Open it, three dots > Edit dashboard > three dots > Raw configuration editor.
 #   3. Paste this file and replace every "owlet_sock_serial_number" with the
-#      entity id prefix of your sock (for example "owlet_sock_ab12cd34"), see
+#      entity id prefix of your sock (for example "owlet_sock_ab12cd34", or
+#      "nursery_owlet_sock_ab12cd34" when Home Assistant added the area), see
 #      Settings > Devices & services > Owlet Smart Sock > your sock > entities.
 #
 # This is not a medical device. Data is polled from the Owlet cloud and can be
