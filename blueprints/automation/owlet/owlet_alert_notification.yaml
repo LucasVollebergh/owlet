@@ -1,0 +1,77 @@
+blueprint:
+  name: Owlet alert notification
+  description: >-
+    Send a notification to a phone when one of the selected Owlet alerts turns
+    on (for example low oxygen or low heart rate).
+
+
+    This is a convenience on top of Home Assistant polling the Owlet cloud and
+    can be delayed. It is not a replacement for the Owlet base station and the
+    Owlet app.
+  domain: automation
+  source_url: https://github.com/lucasvollebergh/owlet/blob/main/blueprints/automation/owlet/owlet_alert_notification.yaml
+  homeassistant:
+    min_version: "2025.12.0"
+  input:
+    alert_sensors:
+      name: Alert sensors
+      description: The Owlet alert binary sensors that should send a notification.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - integration: owlet
+              domain: binary_sensor
+    notify_device:
+      name: Phone
+      description: Device with the Home Assistant Companion app that receives the notification.
+      selector:
+        device:
+          filter:
+            - integration: mobile_app
+    critical:
+      name: Critical notification
+      description: >-
+        Send the notification as critical, so it also sounds when the phone is
+        on silent or do not disturb (iOS critical alerts, Android alarm stream).
+      default: false
+      selector:
+        boolean:
+
+triggers:
+  - trigger: state
+    entity_id: !input alert_sensors
+    to: "on"
+
+variables:
+  critical: !input critical
+  alert_name: "{{ state_attr(trigger.entity_id, 'friendly_name') or trigger.entity_id }}"
+
+actions:
+  - if:
+      - condition: template
+        value_template: "{{ critical }}"
+    then:
+      - domain: mobile_app
+        type: notify
+        device_id: !input notify_device
+        title: Owlet alert
+        message: "{{ alert_name }} is active"
+        data:
+          ttl: 0
+          priority: high
+          channel: alarm_stream
+          push:
+            sound:
+              name: default
+              critical: 1
+              volume: 1.0
+    else:
+      - domain: mobile_app
+        type: notify
+        device_id: !input notify_device
+        title: Owlet alert
+        message: "{{ alert_name }} is active"
+
+mode: queued
+max: 10
