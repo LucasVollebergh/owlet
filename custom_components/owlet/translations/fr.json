@@ -158,5 +158,11 @@
     "command_failed": {
       "message": "L'envoi de la commande au cloud Owlet a échoué"
     }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Les données Owlet ne sont plus mises à jour depuis longtemps",
+      "description": "{name} n'a envoyé aucune nouvelle mesure au cloud Owlet depuis {last_reading}, alors que la chaussette n'est pas en charge et que la station de base est allumée.\n\nVérifiez que la station de base est alimentée et connectée au Wi-Fi, et que l'application Owlet affiche des données en direct. Ce message disparaît automatiquement dès que de nouvelles mesures arrivent."
+    }
   }
 }

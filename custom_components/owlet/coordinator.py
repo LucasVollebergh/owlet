@@ -12,6 +12,7 @@ from pyowletapi.sock import Sock
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -22,6 +23,7 @@ from .const import (
     DOMAIN,
     FRESHNESS_PROPERTIES,
     POLLING_INTERVAL,
+    STALE_ISSUE_AFTER,
     VITAL_PROPERTIES_V2,
     VITALS_PROPERTY_V3,
 )
@@ -67,7 +69,39 @@ class OwletCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.config_entry, data={**self.config_entry.data, **tokens}
             )
 
+        self._async_update_stale_issue()
         return self.sock.properties
+
+    @property
+    def stale_issue_id(self) -> str:
+        """Return the repair issue id for stale data of this sock."""
+        return f"stale_data_{self.sock.serial}"
+
+    def _async_update_stale_issue(self) -> None:
+        """Raise a repair issue when the data has been stale for a long time."""
+        last_updated = self.last_updated
+        if (
+            self.is_stale
+            and last_updated is not None
+            and dt_util.utcnow() - last_updated > STALE_ISSUE_AFTER
+        ):
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self.stale_issue_id,
+                is_fixable=False,
+                is_persistent=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="stale_data",
+                translation_placeholders={
+                    "name": f"Owlet Sock {self.sock.serial}",
+                    "last_reading": dt_util.as_local(last_updated).strftime(
+                        "%Y-%m-%d %H:%M"
+                    ),
+                },
+            )
+        else:
+            ir.async_delete_issue(self.hass, DOMAIN, self.stale_issue_id)
 
     def _property_updated_at(self, raw_key: str) -> datetime | None:
         """Return the data_updated_at timestamp of a raw Ayla property."""

@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .compat import (
@@ -30,7 +31,7 @@ from .compat import (
     OwletDevicesError,
     OwletError,
 )
-from .const import CONF_OWLET_EXPIRY, CONF_OWLET_REFRESH, SUPPORTED_VERSIONS
+from .const import CONF_OWLET_EXPIRY, CONF_OWLET_REFRESH, DOMAIN, SUPPORTED_VERSIONS
 from .coordinator import OwletCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
@@ -91,7 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OwletConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: OwletConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        for coordinator in entry.runtime_data.values():
+            ir.async_delete_issue(hass, DOMAIN, coordinator.stale_issue_id)
+    return unload_ok
 
 
 def _async_store_tokens(

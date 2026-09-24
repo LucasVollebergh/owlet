@@ -1,5 +1,6 @@
 """Constants for the Owlet Smart Sock integration."""
 
+from datetime import timedelta
 from typing import Final
 
 DOMAIN: Final = "owlet"
@@ -18,6 +19,9 @@ MIN_POLLING_INTERVAL: Final = 5
 
 # Minutes without a fresh reading before vitals are treated as stale, 0 disables.
 DEFAULT_STALE_THRESHOLD: Final = 5
+
+# How long data has to stay stale before a repair issue is raised.
+STALE_ISSUE_AFTER: Final = timedelta(hours=1)
 
 MANUFACTURER: Final = "Owlet Baby Care"
 SLEEP_STATES: Final = {0: "unknown", 1: "awake", 8: "light_sleep", 15: "deep_sleep"}

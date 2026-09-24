@@ -158,5 +158,11 @@
     "command_failed": {
       "message": "Sending the command to the Owlet cloud failed"
     }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Owlet data has not been updated for a long time",
+      "description": "{name} has not sent a new reading to the Owlet cloud since {last_reading}, while the sock is not charging and the base station is on.\n\nCheck that the base station has power and Wi-Fi, and that the Owlet app shows live data. This message disappears by itself once new readings arrive."
+    }
   }
 }

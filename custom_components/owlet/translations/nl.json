@@ -158,5 +158,11 @@
     "command_failed": {
       "message": "Het commando naar de Owlet-cloud versturen is mislukt"
     }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Owlet-gegevens zijn al lang niet meer bijgewerkt",
+      "description": "{name} heeft sinds {last_reading} geen nieuwe meting meer naar de Owlet-cloud gestuurd, terwijl de sok niet oplaadt en het basisstation aan staat.\n\nControleer of het basisstation stroom en wifi heeft en of de Owlet-app live gegevens toont. Deze melding verdwijnt vanzelf zodra er nieuwe metingen binnenkomen."
+    }
   }
 }
